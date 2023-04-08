@@ -1,0 +1,52 @@
+accescode = wQyrp3mhYbAAAAAAAAAAU4it6sjnRu8l8DaKrSq2BUA
+
+App key
+5dloqjjbgv4lo45
+App secret
+kvzfw40fkqhj9c0
+
+
+"access_token": "sl.BSVEVluWJxoUDfMGN877t_LAs9Ft3niEV0lMo0olnuMD1LxAAi-fgdYw-lMWMf9jhwtlfRIRmsxLXm9aM7qd9kEFQpYvRJAt36iMf9D6ji6MRP3IUc8SDK342pjsRuLj6UlXyEU7-S9X",
+    "token_type": "bearer",
+    "expires_in": 14400,
+    "refresh_token": "1Cub_tOtgnEAAAAAAAAAAca10QSmyrD8jzxfNIrdbKFUe-_SnloCV4W0IdXv5_pr",
+    "scope": "account_info.read account_info.write contacts.read contacts.write file_requests.read file_requests.write files.content.write files.metadata.read files.metadata.write sharing.read sharing.write",
+    "uid": "4605219248",
+    "account_id": "dbid:AAAgDfHrbsHaiprD5SI0TQBz_zYvuMm2NR8"
+}
+
+
+
+store_images app details
+APPKEY = "pwj94rjjdt1bas2"
+APPSECRET = "8edkrtfgp4uwkuj"
+FOLDER_NAME = "ctn_images"
+REFRESH_TOKEN = "s70Vy8JlPIYAAAAAAAAAAa494_89smqqAyrkY5SFdXQR9n_Vo0gtsDf_U49OxcNw"
+APP_TOKEN = "sl.BRflssQUvHnoAYZMmzSdLQscTgBF2L_vP4rr_QhF_CoJWBXW_VsIxk-P3Q5g3KovkvrYB4oYGDwwKLcQeJaGwMsDtNYxfHxM9QijIb45qznRRighvQQm2IF9Z9AbUA-AybRkw2UncnE"
+
+
+https://images.unsplash.com/photo-1470092306007-055b6797ca72?ixlib=rb-1.2.1&auto=format&fit=crop&w=668&q=80
+
+   <a href="#">create request</a>
+                           &lt;!&ndash; <button class="btn btn-sm btn-secondary btn-lg active" type="submit" aria-pressed="true"
+                                    onclick="fetchRow(this)">Add to Request
+                            </button>
+&ndash;&gt;
+
+
+
+def get_requests():
+    requests = Request.query.options(joinedload(Request.request_items)).all()
+    result = []
+    for request in requests:
+        requested_items = []
+        for request_item in request.request_items:
+            item_id = db.session.query(Item).filter(Item.id == request_item.item_id).first()
+            item = {"id": request_item.item_id, "qty": request_item.item_qty, "name": item_id.item_name}
+            requested_items.append(item)
+        result.append({
+            'id': request.id,
+            'req_date': request.req_date,
+            'requested_items': requested_items
+        })
+    return jsonify(result)

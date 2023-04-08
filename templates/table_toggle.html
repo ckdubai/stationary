@@ -1,0 +1,134 @@
+{% include "header.html" %}
+
+
+<!-- Page Header -->
+<header class="masthead" style="">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+                <div class="site-heading">
+                    <h1>Stationary Request</h1>
+                    <span class="subheading">All Requests</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<section>
+    <div class="container-fluid">
+        <table id="myTable" class="table table-striped table-bordered display">
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Date</th>
+                    <th>Request Created By</th>
+                    <th>Items</th> <!-- Add column for Items -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for req_data in form %}
+                <tr class="child-row" data-requestid="{{ req_data['Request ID'] }}" onclick="formatChildRow({{ req_data|tojson }})">
+                    <td>{{ req_data['Request ID'] }}</td>
+                    <td>{{ req_data['Date'] }}</td>
+                    <td>{{ req_data['Requested By'] }}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm toggle-items" data-requestid="{{ req_data['Request ID'] }}">Show Items</button>
+                        <button class="btn btn-primary btn-sm print" data-requestid="{{ req_data['Request ID'] }}">Print Request</button>
+                        <button class="btn btn-primary btn-sm delete" data-requestid="{{ req_data['Request ID'] }}">Delete Request</button>
+                        <ul class="list-group items-row" data-requestid="{{ req_data['Request ID'] }}" style="display: none;">
+                            {% for item in req_data['Items'] %}
+                            <li class="list-group-item">
+                                <strong>Name:</strong> {{ item['Name'] }}<br>
+                                <strong>Code:</strong> {{ item['Code'] }}<br>
+                                <strong>Quantity:</strong> {{ item['Quantity'] }}<br>
+                                <strong>Unit:</strong> {{ item['Unit'] }}<br>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+<!-- Include jQuery -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.js"></script>
+
+<!-- Load Bootstrap CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+
+<!-- Include DataTables -->
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.3/umd/popper.min.js"></script>
+
+
+
+<script>
+
+function formatChildRow(req_data) {
+    // Extract the 'Items' data from the row data
+    var items = req_data['Items'];
+
+    // Create an HTML string for the child row content
+    var content = '<ul class="list-group">';
+    for (var i = 0; i < items.length; i++) {
+        content += '<li class="list-group-item">' +
+            '<strong>Name:</strong> ' + items[i]['Name'] + '<br>' +
+            '<strong>Code:</strong> ' + items[i]['Code'] + '<br>' +
+            '<strong>Quantity:</strong> ' + items[i]['Quantity'] + '<br>' +
+            '<strong>Unit:</strong> ' + items[i]['Unit'] +
+            '</li>';
+    }
+    content += '</ul>';
+
+    return content;
+}
+ $(document).ready(function() {
+   var table = $('#myTable').DataTable({
+        // Add the columnDefs option
+        columnDefs: [{
+            targets: [0], // Index of the column to be hidden (0-based index)
+            visible: false, // Set the column to be hidden
+            searchable: false // Disable searching on this column
+        }],
+        // Your other options and configurations...
+    });
+
+     // Add click event listener to toggle hide/show on row click
+    $("#myTable tbody").on("click", "tr", function() {
+
+    var row = table.row(this);
+    if (row.child.isShown()) {
+        // This row is already open - close it
+        row.child.hide();
+        $(this).removeClass('shown');
+    } else {
+        // Get the req_data from the row data
+        var req_data = row.data();
+
+        // Call the formatChildRow() function with the req_data object
+        row.child(formatChildRow(req_data)).show();
+        $(this).addClass('shown');
+    }
+});
+   // Add click event listener for the "Show Items" button
+    $("#myTable tbody").on("click", ".toggle-items", function(e) {
+        e.stopPropagation(); // Prevent row click event from firing
+        var requestID = $(this).data("requestid");
+        $(".items-row[data-requestid='" + requestID + "']").toggle();
+    });
+
+});
+
+</script>
+
+
+
+
+
+
+

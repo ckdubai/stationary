@@ -1,0 +1,229 @@
+{% include "header.html" %}
+{% from "bootstrap/pagination.html" import render_pagination %}
+
+<!-- Page Header -->
+<header class="masthead" style="background-image: url('static/img/header-bkg.jpeg')">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+                <div class="site-heading">
+                    <h1>Studio Warehouse</h1>
+                    <span class="subheading">Stationary Requests</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<section>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-7">
+
+                <table class="table table-striped table-bordered" id="sortTableView">
+                    <thead>
+                    <tr>
+                        <th style="display:none;"></th>
+                        <th>Date of Request</th>
+                        <th>Requested By</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+
+                    {% for requests in form %}
+
+
+                    <tr>
+                        <td class="item_id" style="display:none;">{{ requests.id }}</td>
+                        <td class="col-name">{{ requests.req_date }}</td>
+                        <td>{{ requests.requested_by.name }}</td>
+
+                        <td>
+                            <a href="#" class="data-link" onmouseover="get_item_details({{requests.id}})" id="data-link" data-req-id="{{ requests.id }}">👁</a>
+                            <a href="{{url_for('download_request',req_id=requests.id)}}">⬇️</a>
+                            <a href="" onclick="return confirm('Are you sure you want to delete this item?');">✘</a>
+                        </td>
+                    </tr>
+
+
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+
+                <script>
+
+   $('#sortTableView').DataTable();
+
+
+
+
+
+                </script>
+
+            </div>
+            <div class="col-lg-5">
+                <div class="card card-registration card-registration-2" style="border-radius: 15px;">
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <div class="col-lg-12" id="mmm">
+                                <div class="p-5" id="header-box">
+                                    <div class="d-flex justify-content-between align-items-center mb-5">
+                                            <h1 class="fw-bold mb-0 text-black">Request Items</h1>
+                                            <h6 class="mb-0 text-muted">3 items</h6>
+
+                                        </div>
+                                        <hr class="my-4">
+                                    <div class="p-5" id="add_row">
+
+
+                                        <!-- {% for item in requested_items %}
+                                          <div class="row mb-4 d-flex justify-content-between align-items-center" id="ity">
+
+
+                                              <div class="col-md-5 col-lg-5 col-xl-5" id="parentRow">
+
+                                                  <h6 class="text-black mb-0" id="item">{{ item.name}} {{
+                                                      item.item_code}}</h6>
+                                                  <hr class="my-4">
+                                              </div>
+
+                                              <div class="col-md-3 col-lg-2 col-xl-2">
+                                                  <h6 class="mb-0" id="unit">{{ item.qty }} {{ item.unit }}</h6>
+                                                  <hr class="my-4">
+                                              </div>
+
+                                          </div>
+                                        {% endfor %}-->
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    </div>
+</section>
+<script>
+
+// Define an object to store modal windows for each link
+var modals = {};
+console.log(bootstrap);
+function get_item_details(req_id) {
+   // Check if a modal for this req_id already exists
+  if (modals[req_id]) {
+    var modalInstance = new bootstrap.Modal(modals[req_id]);
+    modalInstance.show();
+    return;
+  }
+
+
+  fetch('/view_requested_items', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      req_id: req_id
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+
+    // Close the current modal if it exists for this link
+    if (modals[req_id]) {
+      clearModal(modals[req_id]);
+    }
+
+    // Create a new modal
+    var modal = document.createElement('div');
+    modal.setAttribute('id', 'modal-' + req_id);
+    modal.classList.add('modal', 'fade');
+    modal.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Requested Items</h5>
+            <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <table id="data-table-${req_id}" class="table table-striped table-bordered dTable">
+              <thead>
+                <tr>
+                  <th>Item Code</th>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add the modal to the document body
+    document.body.appendChild(modal);
+
+    // Add data rows to the table
+    var tableBody = modal.querySelector('table tbody');
+    for (let i = 0; i < data.length; i++) {
+      var dataRow = tableBody.insertRow();
+      dataRow.insertCell().textContent = data[i].item_code;
+      dataRow.insertCell().textContent = data[i].name;
+      dataRow.insertCell().textContent = data[i].qty;
+      dataRow.insertCell().textContent = data[i].unit;
+    }
+
+    // Show the modal
+    var modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+
+    // Update the modals object with the new modal for this link
+    modals[req_id] = modal;
+
+     // Add event listeners for mouse hover and mouse out for the modal
+    modal.addEventListener('mouseenter', () => {
+      // Do nothing when the mouse enters the modal
+    });
+    modal.addEventListener('mouseleave', () => {
+      // Clear the modal and delete the window object for this link
+      clearModal(modals[req_id]);
+      modals[req_id] = null;
+    });
+
+
+  })
+  .catch(error => console.error(error));
+}
+
+// Function to clear the data from the table and delete the modal
+function clearModal(modal) {
+
+
+  // Hide and remove the modal from the document
+  modal.style.display = 'none';
+  modal.remove();
+  // Hide and remove the modal from the document
+  var modalInstance = bootstrap.Modal.getInstance(modal);
+  modal.style.display = 'none';
+  modalInstance.hide();
+  modal.remove();
+}
+
+
+</script>
+{% include "footer.html" %}

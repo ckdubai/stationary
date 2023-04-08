@@ -1,0 +1,208 @@
+session['cart'] = [{'id': 1, 'quantity': 2}]
+
+function logNewValue(qty_id) {
+var upQty = document.querySelector('input').value;
+  fetch('/update_qty', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({qty_id},{upQty})
+    });
+}
+
+// Define an object to store modal windows for each link
+var modals = {};
+
+function get_item_details(req_id) {
+  fetch('/view_requested_items', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      req_id: req_id
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+
+    // Close the current modal if it exists for this link
+    if (modals[req_id]) {
+      clearModal(modals[req_id]);
+    }
+
+    // Create a new modal
+    var modal = document.createElement('div');
+    modal.setAttribute('id', 'modal-' + req_id);
+    modal.classList.add('modal', 'fade');
+    modal.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Requested Items</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <table id="data-table-${req_id}" class="table table-striped table-bordered">
+              <thead>
+                <tr>
+                  <th>Item Code</th>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add the modal to the document body
+    document.body.appendChild(modal);
+
+    // Add data rows to the table
+    var tableBody = modal.querySelector('table tbody');
+    for (let i = 0; i < data.length; i++) {
+      var dataRow = tableBody.insertRow();
+      dataRow.insertCell().textContent = data[i].item_code;
+      dataRow.insertCell().textContent = data[i].name;
+      dataRow.insertCell().textContent = data[i].qty;
+      dataRow.insertCell().textContent = data[i].unit;
+    }
+
+    // Show the modal
+    var modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+
+    // Update the modals object with the new modal for this link
+    modals[req_id] = modal;
+  })
+  .catch(error => console.error(error));
+}
+
+// Function to clear the data from the table and delete the modal
+function clearModal(modal) {
+  // Get the table element
+  var table = modal.querySelector('table');
+
+  // Remove all rows from the table
+  while (table.rows.length > 1) {
+    table.deleteRow(1);
+  }
+
+  // Hide and remove the modal from the document
+  var modalInstance = bootstrap.Modal.getInstance(modal);
+  modalInstance.hide();
+  modal.remove();
+}
+
+// Add event listeners for mouse hover and mouse out for each link
+var links = document.querySelectorAll('.data-link');
+links.forEach(link => {
+  link.addEventListener('mouseleave', () => {
+    // Get the req_id associated with this link
+    var req_id = link.dataset.reqId;
+
+    // Clear the modal and delete the window object for this link
+    clearModal(modals[req_id]);
+    modals[req_id] = null;
+  });
+});
+
+import json
+
+def download_request(req_id):
+    request_details = Request.query.filter_by(id=req_id).first()
+    request_items = request_details.request_items
+
+    request_data = {
+        "Requested By": request_details.requested_by.name,
+        "Date": request_details.req_date,
+        "Items": []
+    }
+
+    for request_item in request_items:
+        item_detail = Item.query.get(request_item.item_id)
+        item = {
+            "Name": item_detail.item_name,
+            "Code": item_detail.item_code,
+            "Quantity": request_item.item_qty,
+            "Unit": item_detail.item_unit
+        }
+        request_data["Items"].append(item)
+
+    json_data = json.dumps(request_data)
+
+    return json_data
+
+
+@app.route("/view_all", methods=["GET", "POST"])
+def view_all():
+    requests = Request.query.all()
+    request_data = []
+    for req in requests:
+        request_items = req.request_items
+        items = []
+        for request_item in request_items:
+            item_detail = Item.query.get(request_item.item_id)
+            item = {
+                "Name": item_detail.item_name,
+                "Code": item_detail.item_code,
+                "Quantity": request_item.item_qty,
+                "Unit": item_detail.item_unit
+            }
+            items.append(item)
+
+        req_data = {
+            "Request ID": req.id,
+            "Requested By": req.requested_by.name,
+            "Date": req.req_date,
+            "Items": items
+        }
+        request_data.append(req_data)
+
+    return render_template("table.html", form=request_data, current_user=current_user), jsonify(request_data), 200
+
+fetch('/view_all', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+
+  })
+  .then(response => response.json())
+  .then(response => response.json())
+  .then(data => {
+     console.log(data);
+    // Add each request row to the table
+    data.forEach(request => {
+      var requestRow = requestTable.row.add({
+        'Request ID': request['Request ID'],
+        'Requested By': request['Requested By'],
+        'Date': request['Date']
+      }).node();
+      // Add requested items as a drilldown row
+      addRequestedItems(requestRow, request.Items);
+    });
+    // Draw the table
+    requestTable.draw();
+  })
+  .catch(error => console.error(error));
+});
+
+
+$.ajax({
+		url: 'http://127.0.0.1:5000/view_all',
+		success: function(data) {
+			// Parse the JSON data
+
+			console.log(data);
+		}
+	});

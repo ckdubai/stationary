@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+            <div class="row mb-4 d-flex justify-content-between align-items-center ity">
+
+
+      <div class="col-md-5 col-lg-5 col-xl-5" id="parentRow">
+
+                                                                    <h6 class="text-black mb-0" id="item">item 1</h6>
+                                                                    <hr class="my-4">
+                                                                </div>
+                                                                <div class="col-md-3 col-lg-3 col-xl-2 d-flex" style="margin-bottom: 40px;"><button class="btn btn-link px-2" onclick="this.parentNode.querySelector(\'input[type=number]\').stepDown(); logNewValue(\''+rowValues[0]+'\')">
+                                                                                                                  <i class="fas fa-minus"></i>
+                                                                                                                </button>
+                                                                    <input id="form1" min="1" name="quantity" value="1" type="number" class="form-control form-control-sm" onblur="upd_qty(\''+rowValues[0]+'\',this.value)"/>
+                                                                    <button class="btn btn-link px-2" onclick="this.parentNode.querySelector(\'input[type=number]\').stepUp(); logNewValue(\''+rowValues[0]+'\',this)">
+                                                                        <i class="fas fa-plus"></i>
+                                                                    </button>
+                                                               </div>
+                                                                <div class="col-md-3 col-lg-2 col-xl-2">
+                                                                    <h6 class="mb-0" id="unit">nos</h6>
+                                                                    <hr class="my-4">
+                                                                </div>
+                                                                <div class="col-md-1 col-lg-1 col-xl-1 text-end">
+                                                                    <a href="" class="text-muted deleteLink" id="deleteLink"><i class="fas fa-times deleteLink"></i></a>
+                                                                    <hr class="my-4">
+                                                                </div>
+
+
+            </div>
+</body>
+</html>
+
+var responseClone; // 1
+fetch('https://example.com/some/path/to/json')
+.then(function (response) {
+    responseClone = response.clone(); // 2
+    return response.json();
+})
+.then(function (data) {
+    // Do something with data
+}, function (rejectionReason) { // 3
+    console.log('Error parsing JSON from response:', rejectionReason, responseClone); // 4
+    responseClone.text() // 5
+    .then(function (bodyText) {
+        console.log('Received the following instead of valid JSON:', bodyText); // 6
+    });
+});
+
+
+
+.then(response => response.json())
+    .then(data => {
+
+      const parentDiv = document.getElementById('add_row');
+      const rowDiv = document.getElementById('ity');
+      rowDiv.innerHTML = '';
+      for(const item of data.requested_items) {
+      rowDiv.innerHTML = '<div class="col-md-5 col-lg-5 col-xl-5" id="parentRow">\n' +
+
+                                                                    '<h6 class="text-black mb-0" id="item"></h6>\n' +
+                                                                    '<hr class="my-4">\n' +
+                                                                '</div>\n' +
+
+                                                                '<div class="col-md-3 col-lg-2 col-xl-2">\n' +
+                                                                    '<h6 class="mb-0" id="unit"></h6>\n' +
+                                                                    '<hr class="my-4">\n' +
+                                                                '</div>\n';
+
+    parentDiv.appendChild(rowDiv);
+
+}
+})
+   .catch(error => console.error(error));
