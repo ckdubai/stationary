@@ -5,3 +5,24 @@
 .custom-table-width {
     width: 500px; /* set the desired width value */
 }
+
+.nav-link {
+  color: white; /* Set the link color to white */
+}
+
+.nav-link:hover {
+  color: #e0e0e0; /* Set the link color to a lighter shade of white on hover */
+}
+
+.ity {
+ height: 40px;
+}
+
+.wrap-text {
+   white-space: normal;
+}
+
+.custom-row {
+        border: 4px solid #ccc; /* Change the color and size as needed */
+        padding: 10px; /* Add padding to give some spacing */
+    }

@@ -1,10 +1,18 @@
 {% include "header.html" %}
 
+<style>
+.nav-link {
+  color: white; /* Set the link color to white */
+}
 
+.nav-link:hover {
+  color: #e0e0e0; /* Set the link color to a lighter shade of white on hover */
+}
+</style>
 <!-- Page Header -->
 <header class="masthead" style="">
     <div class="overlay"></div>
-    <div class="container">
+      <div class="container">
         <div class="row" style="height: 300px;">
             <div class="col-lg-8 col-md-10 mx-auto">
                 <div class="site-heading">
@@ -12,8 +20,25 @@
                     <span class="subheading">All Requests</span>
                 </div>
             </div>
+            <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">Active</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Link</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled">Disabled</a>
+          </li>
+        </ul>
         </div>
+
     </div>
+
+
 </header>
 <section>
     <div class="container">
@@ -76,6 +101,12 @@ function formatChildRow(req_data) {
     // Extract the 'Items' data from the row data
     var items = req_data['Items'];
 
+     // Check if items is undefined or not an array
+    if (typeof items === 'undefined' || !Array.isArray(items)) {
+        console.error('Items data is not defined or not an array');
+        return ''; // or you can return an appropriate default value
+    }
+
     // Create an HTML string for the child row content
     var content = '<ul class="list-group">';
     for (var i = 0; i < items.length; i++) {
@@ -125,6 +156,58 @@ function formatChildRow(req_data) {
         var requestID = $(this).data("requestid");
         $(".items-row[data-requestid='" + requestID + "']").toggle();
     });
+
+// Using jQuery
+$('.print').on('click', function() {
+    var requestId = $(this).data('requestid');
+
+    fetch('/download/' + requestId, {
+    method: 'GET',
+    responseType: 'arraybuffer'
+})
+.then(response => {
+    if (response.ok) {
+        return response.arrayBuffer();
+    } else {
+        throw new Error('Error downloading file');
+    }
+})
+.then(data => {
+    var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    var downloadUrl = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = 'example.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+})
+.catch(error => {
+    // Handle error response
+    console.error(error);
+});
+});
+
+
+$('.delete').on('click', function() {
+    var requestId = $(this).data('requestid');
+    var delete_check = confirm("Want to delete this request?");
+    if (delete_check) {
+
+     $.ajax({
+                url: '/delete_request/' + requestId,
+                type: 'DELETE',
+                success: function (response) {
+                    // If deletion is successful, remove the row from the table
+                     $(`.child-row[data-requestid="${requestId}"]`).remove();
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+      }
+});
 
 });
 

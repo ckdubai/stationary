@@ -206,3 +206,19 @@ $.ajax({
 			console.log(data);
 		}
 	});
+
+
+	$('.delete').on('click', function() {
+    var requestId = $(this).data('requestid');
+    alert("delete");
+    $.ajax({
+                url: '/delete_request/' + requestId,
+                type: 'DELETE',
+                success: function (response) {
+                    // If deletion is successful, remove the row from the table
+                    $(`#request_${requestId}`).remove();
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });

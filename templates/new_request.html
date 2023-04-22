@@ -1,0 +1,290 @@
+{% include "header.html" %}
+
+
+<!-- Page Header -->
+<header class="masthead" style="background-image: url('static/img/office-bkg.jpg')">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+                <div class="site-heading">
+                    <h1>Stationery</h1>
+                    <span class="subheading">Create New Request</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<section>
+    <div class="container">
+        <div class="row custom-row">
+            <div class="col-lg-7">
+
+                <table class="table table-striped table-bordered" id="sortTable">
+                    <thead>
+                    <tr>
+                        <th style="display:none;"></th>
+                        <th>Item</th>
+                        <th>Code</th>
+                        <th>Unit</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+
+                    {% for item in form %}
+
+
+                    <tr>
+                        <td class="item_id" style="display:none;">{{ item.id }}</td>
+                        <td class="col-name">{{ item.item_name }}</td>
+                        <td>{{ item.item_code }}</td>
+                        <td>{{ item.item_unit }}</td>
+                        <td class="text-center"><button class="btn btn-sm btn-primary active" type="submit" aria-pressed="true"
+                                    onclick="fetchRow(this)">Add
+                            </button></td>
+                    </tr>
+
+                    {% endfor %}
+                    </tbody>
+
+                </table>
+<script>
+$('#sortTable').DataTable();
+</script>
+            </div>
+            <div class="col-lg-5">
+                <div class="card" style="border-radius: 15px;">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                                            <h4 class="fw-bold mb-0 text-black">Request Items</h4>
+                                            <h6 class="mb-0 text-muted" id="itemCount">0 items</h6>
+                                            <button class="btn btn-success" id="create_button" onclick="createRequest()" disabled>Create</button>
+                                        </div>
+                   </div>
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <div class="col-lg-12" id="mmm">
+
+                                <div class="p-5" id="add_row">
+
+
+
+                                </div>
+
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<script>
+
+<!--$(document).ready(function(){
+  document.getElementById( 'item_id' ).style.display = 'none';
+})-->
+
+
+</script>
+<script>
+function fetchRow(button)
+{
+    // Get the parent row of the button
+    let row = button.parentNode.parentNode;
+
+    // Initialize an empty array to store the values of the row
+    let rowValues = [];
+
+    // Iterate through the cells of the row
+    for (let i = 0; i < row.cells.length; i++)
+    {
+        // Push the value of the cell to the rowValues array
+        rowValues.push(row.cells[i].innerHTML);
+    }
+
+    // Get the div element where the row data will be inserted
+    var item_box = document.getElementById('add_row');
+    var new_item = document.createElement('div');
+
+    new_item.className = "row mb-4 d-flex justify-content-between align-items-center ity";
+    new_item.innerHTML = '<div class="col-md-5 col-lg-5 col-xl-5" id="parentRow">\n' +
+
+        '<h6 class="text-black mb-0" id="item">' + rowValues[1] + " " + rowValues[2] + '</h6>\n' +
+        '<hr class="my-4">\n' +
+        '</div>\n' +
+        '<div class="col-md-3 col-lg-3 col-xl-3 d-flex" style="margin-bottom: 40px;"><button class="btn btn-link px-2" onclick="stepDownAndUpdateValue(this, \'' + rowValues[0] + '\')">\n' +
+        '<i class="fas fa-minus"></i>\n' +
+        '</button>\n' +
+        '<input id="form1" min="1" name="quantity" value="1" type="number" class="form-control form-control-sm" onblur="upd_qty(\'' + rowValues[0] + '\',this.value)" style="width: 60px;"/>\n' +
+        '<button class="btn btn-link px-2" onclick="stepUpAndUpdateValue(this, \'' + rowValues[0] + '\')">\n' +
+        '<i class="fas fa-plus"></i>\n' +
+        '</button>\n' +
+        '</div>\n' +
+        '<div class="col-md-3 col-lg-2 col-xl-2">\n' +
+        '<h6 class="mb-0" id="unit" style="padding-left: 5px;">' + rowValues[3] + '</h6>\n' +
+        '<hr class="my-4">\n' +
+        '</div>\n' +
+        '<div class="col-md-1 col-lg-1 col-xl-1 text-end">\n' +
+        '<a href="" class="text-muted deleteLink" id="deleteLink" data-delID="' + rowValues[0] + '"><i class="fas fa-times deleteLink"></i></a>\n' +
+        '<hr class="my-4">\n' +
+        '</div>\n';
+
+
+    item_box.appendChild(new_item);
+    item_id = rowValues[0];
+    // update the total number of items in the card header
+    var itemCountElement = document.getElementById('itemCount');
+    var itemCount = parseInt(itemCountElement.innerText);
+
+    // Increment the item count
+    itemCount++;
+
+    // Update the h6 element with the new item count
+    itemCountElement.innerText = itemCount + ' items';
+    // Enable the button with id "createButton"
+    document.getElementById("create_button").disabled = false;
+
+    fetch('/add_to_cart',
+    {
+        method: 'POST',
+        headers:
+        {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(
+        {
+            item_id
+        })
+    });
+}
+// delete item from request card
+$(document).on("click", '#deleteLink', function(event)
+{   var del_Id = $(this).data('delid');
+<!--    alert(del_Id);-->
+     fetch('/remove_from_cart',
+    {
+        method: 'POST',
+        headers:
+        {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(
+        {
+            del_Id
+        })
+    });
+    event.preventDefault();
+    $(this).closest('.row').remove();
+
+    // update the total number of items in the card header
+    var itemCountElement = document.getElementById('itemCount');
+    var itemCount = parseInt(itemCountElement.innerText);
+
+    // Increment the item count
+    itemCount--;
+
+    // Update the h6 element with the new item count
+    itemCountElement.innerText = itemCount + ' items';
+
+    // Enable the button with id "createButton"
+    if (itemCount == 0)
+    {
+        document.getElementById("create_button").disabled = true;
+    }
+
+});
+
+
+// Update quantity of the item in request card when the + or - button is pressed
+function logNewValue(qty_id,button) {
+var upQty = button.parentNode.querySelector('input').value;
+
+  fetch('/update_qty', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({qty_id,upQty})
+    });
+}
+
+function createRequest() {
+     const myDiv = document.getElementById('mmm');
+     const inputs = myDiv.querySelectorAll('input');
+     const inputValues = [];
+     inputs.forEach(input => {
+     inputValues.push(input.value);
+});
+     console.log(inputValues);
+    fetch('/create_request', {
+     method: 'POST',
+     headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+    },
+     body: JSON.stringify({inputValues})
+})
+  .then(response => {
+    if (response.ok) {
+      // Redirect to the homepage
+      window.location.href = '/';
+    } else {
+      // Handle the error
+      console.error('Error:', response.statusText);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+}
+
+// update quantity when the user type the values and leave the mouse
+function upd_qty(qty_id,upd_value) {
+var upQty = upd_value;
+
+
+  fetch('/update_qty', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({qty_id,upQty})
+    });
+
+
+}
+
+
+
+window.addEventListener('beforeunload', function (event) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/logout', false);
+    xhr.send();
+});
+
+
+function stepDownAndUpdateValue(button, rowValue) {
+    var inputElement = button.nextElementSibling;
+    inputElement.stepDown();
+    logNewValue(rowValue,inputElement);
+    inputElement.value = inputElement.value; // Update the displayed value in the input field
+}
+
+function stepUpAndUpdateValue(button, rowValue) {
+    var inputElement = button.previousElementSibling;
+    inputElement.stepUp();
+    logNewValue(rowValue,inputElement);
+    inputElement.value =inputElement.value; // Update the displayed value in the input field
+}
+
+</script>
+
+

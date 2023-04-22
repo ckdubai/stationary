@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, flash, request, session, jsonify, Response
+
 from flask_bootstrap import Bootstrap
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,11 +9,27 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import CreateItemForm, RegisterForm, LoginForm
 from functools import wraps
 from flask import abort
+
+from jinja2 import Environment, FileSystemLoader
 from datetime import datetime
+
 import openpyxl
+
 from io import BytesIO
 
+# Create Jinja2 environment
+env = Environment(loader=FileSystemLoader('templates'))
+env.globals.update(url_for=url_for)
 
+
+def custom_date(date_str):
+    """Custom Jinja2 filter to format date to dd/mm/yyyy"""
+    date_obj = datetime.strptime(date_str, '%Y-%m-%d')  # Convert date string to datetime object
+    return date_obj.strftime('%d/%m/%Y')  # Format date to dd/mm/yyyy
+
+
+# Add custom filter to Jinja2 environment
+env.filters['custom_date'] = custom_date
 
 app = Flask(__name__)
 app.config['_permanent'] = False
@@ -100,9 +117,9 @@ db.create_all()
 
 
 @app.route('/', methods=["GET", "POST"])
-@login_required
 def get_all():
     requests = Request.query.all()
+
     request_data = []
     for req in requests:
         request_items = req.request_items
@@ -116,16 +133,20 @@ def get_all():
                 "Unit": item_detail.item_unit
             }
             items.append(item)
-        req_date = datetime.strptime(req.req_date, '%Y-%m-%d')
+
         req_data = {
             "Request ID": req.id,
             "Requested By": req.requested_by.name,
-            "Date": req_date.strftime('%d/%m/%Y'),
+            "Date": req.req_date,
             "Items": items
         }
         request_data.append(req_data)
+    template = env.get_template("index.html")  # Replace with the name of your template
+    rendered_template = template.render(form=request_data,
+                                        current_user=current_user)  # Replace with your actual form data
+    return rendered_template  # Replace with your desired output (e.g. write to file, return as HTTP response, etc.)
+    # return render_template("index.html", form=request_data, current_user=current_user)
 
-    return render_template("index.html", form=request_data, current_user=current_user)
 
 
 @app.route('/new_request')
@@ -251,7 +272,7 @@ def login():
             login_user(user)
             session.permanent = False
             # print(f'user id = {session["_user_id"]}')
-            return redirect(url_for('get_all'))
+            return redirect(url_for('get_all_items'))
     return render_template("login.html", form=login_form, current_user=current_user)
 
 
@@ -315,7 +336,6 @@ def update_qty():
 
 
 @app.route('/create_request', methods=["GET", "POST"])
-@login_required
 def create_request():
     if request.method == "POST":
         # create the request with date and the logged in user
@@ -333,11 +353,45 @@ def create_request():
             db.session.add(new_request_item)
             db.session.commit()
         session.pop('cart', None)
-        return redirect('/')
+        return redirect(url_for('get_all'))
+    return redirect(url_for('get_all'))
 
+@app.route('/view_requests', methods=["GET", "POST"])
+def get_all_requests():
+    all_requests = Request.query.all()
+    return render_template("view_requests_popup.html", form=all_requests, current_user=current_user)
+    # requests = Request.query.options(joinedload(Request.request_items)).all()
+    # result = []
+    # for requests in requests:
+    #     requested_items = []
+    #     for request_item in requests.request_items:
+    #         item_id = db.session.query(Item).filter(Item.id == request_item.item_id).first()
+    #         item = {"id": request_item.item_id, "qty": request_item.item_qty, "name": item_id.item_name}
+    #         requested_items.append(item)
+    #     result.append({
+    #         'id': requests.id,
+    #         'req_date': requests.req_date,
+    #         'requested_by': requests.requested_by.name,
+    #         'requested_items': requested_items
+    #     })
+    # print(result)
+    # return render_template("view_requests.html", form=result, current_user=current_user)
+
+
+# @app.route("/view_requested_items/<int:req_id>", methods=["GET", "POST"])
+# def view_requested_items(req_id):
+#     all_requests = Request.query.all()
+#     item_details = []
+#     requested_items = RequestItem.query.filter_by(req_id=req_id).all()
+#     for requested_item in requested_items:
+#         item_id = db.session.query(Item).filter(Item.id == requested_item.item_id).first()
+#         item = {"name": item_id.item_name, "item_code": item_id.item_code, "qty": requested_item.item_qty, "unit": item_id.item_unit}
+#         item_details.append(item)
+#     print(item_details)
+#     print(len(requested_items))
+#     return render_template("view_requests2.html", form=all_requests, requested_items=item_details, current_user=current_user)
 
 @app.route("/view_requested_items", methods=["GET", "POST"])
-@login_required
 def view_requested_items():
     if request.method == "POST":
         data = request.get_json()
@@ -360,7 +414,6 @@ def view_requested_items():
 
 
 @app.route("/download/<int:req_id>", methods=["GET", "POST"])
-@login_required
 def download_request(req_id):
     request_details = Request.query.filter_by(id=req_id).first()
     request_detail = []
@@ -441,7 +494,6 @@ def contact():
 
 
 @app.route("/view_all", methods=["GET", "POST"])
-@login_required
 def view_all():
     requests = Request.query.all()
     request_data = []
@@ -473,7 +525,6 @@ def view_all():
 
 
 @app.route('/delete_request/<int:request_id>', methods=['DELETE'])
-@login_required
 def delete_request(request_id):
     try:
         # Query the request by its ID
