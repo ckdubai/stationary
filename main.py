@@ -41,7 +41,6 @@ def load_user(user_id):
 
 
 # Create admin-only decorator
-
 def admin_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -158,7 +157,7 @@ def add():
 
             db.session.add(new_item)
             db.session.commit()
-            return redirect(url_for('get_all_items'))
+            return redirect(url_for('view_items'))
 
     return render_template("new_item.html", form=item_form, current_user=current_user)
 
@@ -258,6 +257,7 @@ def login():
 # When the user click the Add to cart button, Create a cart varaible in Session and add the item to it with a default
 # quantity of 1
 @app.route('/add_to_cart', methods=["GET", "POST"])
+@login_required
 def add_to_cart():
     if 'cart' not in session:
         session['cart'] = []
@@ -273,30 +273,32 @@ def add_to_cart():
             # item_id does not exist, add it to the cart
             session['cart'].append({'id': item_id, 'quantity': 1})
         session.modified = True
-        print(session['cart'])
+        # print(session['cart'])
     return redirect(url_for('get_all_items'))
 
 
 @app.route('/remove_from_cart', methods=["GET", "POST"])
+@login_required
 def remove_form_cart():
     if request.method == "POST":
         item_to_remove = request.get_json()
         id_to_remove = int(item_to_remove["del_Id"])  # convert to integer
-        print(f"id_to_remove: {id_to_remove}")
-        print(f"session['cart']: {session['cart']}")
+        # print(f"id_to_remove: {id_to_remove}")
+        # print(f"session['cart']: {session['cart']}")
         if 'cart' in session:
             cart_item = next((item for item in session['cart'] if item["id"] == str(id_to_remove)), None)
 
-            print(f"cart_item: {cart_item}")
+            # print(f"cart_item: {cart_item}")
             if cart_item:
                 session['cart'].remove(cart_item)
                 session.modified = True
-            print(session['cart'])
+            # print(session['cart'])
         return redirect(url_for('get_all_items'))
 
 
 # Update the quantity in session when the user click the + or - Button
 @app.route('/update_qty', methods=["GET", "POST"])
+@login_required
 def update_qty():
     if request.method == "POST":
         data = request.get_json()
@@ -310,7 +312,7 @@ def update_qty():
                 break  # exit the for loop
         session['cart'] = cart_check
         session.modified = True
-        print(session['cart'])
+        # print(session['cart'])
     return redirect(url_for('get_all_items'))
 
 
@@ -466,7 +468,7 @@ def view_all():
         }
         request_data.append(req_data)
     response = jsonify(request_data)
-    print(response)
+    # print(response)
     # Set the Access-Control-Allow-Origin header to allow cross-origin requests
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response

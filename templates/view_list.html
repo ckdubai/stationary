@@ -5,17 +5,17 @@
 {% include "header.html" %}
   <!-- Page Header -->
 
-  <header class="masthead" style="">
+  <header class="masthead" style="margin-bottom: 0px;">
     <div class="overlay"></div>
     <div class="container">
       <div class="row">
         <div class="col-lg-8 col-md-10 mx-auto">
-          <div class="post-heading">
+          <div class="post-heading text-center">
             <h1></h1>
-            <h2 class="subheading"></h2>
-            <span class="meta">Posted by
+            <h2 class="subheading">Consumable List</h2>
+            <span class="meta">
               <a href="#"></a>
-              on </span>
+              </span>
           </div>
         </div>
       </div>
@@ -26,15 +26,23 @@
 
 
     <div class="container">
-      <div class="row">
+         <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{{ url_for('get_all_items') }}">New Request</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('view_items') }}">View Stationary List</a>
+          </li>
+                {% if current_user.id == 1: %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('add') }}">Add New Consumable</a>
+          </li>
+             {% endif  %}
+        </ul>
+      <div class="row" style="padding-top: 40px;">
         <div class="col-lg-8 col-md-10 mx-auto">
 
-          <hr>
-            {% if current_user.id == 1 %}
-            <div class="clearfix">
 
-            </div>
-           {% endif %}
 
   <table class="table table-striped table-bordered" id="sortTable">
    <thead>
@@ -76,5 +84,5 @@ $('#sortTable').DataTable();
 </script>
         </div>
 
-{% include "footer.html" %}
+
 {% endblock %}
